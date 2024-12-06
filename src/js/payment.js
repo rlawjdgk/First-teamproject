@@ -663,7 +663,14 @@ function renderCartItems() {
 }
 
 // 최종 결제 금액 업데이트
-function updateFinalPrice(totalAmount = 0) {
+function updateFinalPrice() {
+  const totalFeePriceText =
+    document.querySelector(".total__fee .price").innerText;
+  const totalProductPrice = parseInt(
+    totalFeePriceText.replace(/[^0-9]/g, ""),
+    10
+  );
+
   const couponFeeElement = document.querySelector(".coupon__fee-last");
   const creditFeeElement = document.querySelector(".credit__fee-last");
   const summaryPriceElement = document.querySelector(".summary__price-total");
@@ -674,22 +681,21 @@ function updateFinalPrice(totalAmount = 0) {
     parseInt(creditFeeElement.innerText.replace(/[^0-9]/g, ""), 10) || 0;
 
   // 결제 금액이 50,000원 미만인 경우 크레딧 초기화
-  if (totalAmount - couponFee < 50000) {
+  if (totalProductPrice - couponFee < 50000) {
     creditFee = 0;
-    creditFeeElement.innerText = `₩ 0`;
+    creditFeeElement.innerText = "₩ 0";
   }
 
-  // 최종 금액 계산 (음수 방지)
-  const lastPriceAll = Math.max(totalAmount - couponFee - creditFee, 0);
+  // 최종 결제 금액 계산 (소수점 버림)
+  const finalPrice = Math.max(totalProductPrice - couponFee - creditFee, 0);
 
-  summaryPriceElement.innerText = `￦ ${lastPriceAll.toLocaleString()}`;
+  summaryPriceElement.innerText = `￦ ${finalPrice.toLocaleString()}`;
 }
 
 // 쿠폰과 크레딧 이벤트 리스너 설정
 function setupDiscountListeners() {
   const couponSelect = document.querySelector("#coupon");
   const creditButton = document.querySelector(".used__credit button");
-  const creditAmount = 20000; // 크레딧 금액
 
   // 쿠폰 변경 이벤트
   couponSelect.addEventListener("change", function () {
@@ -707,7 +713,7 @@ function setupDiscountListeners() {
       ".coupon__fee-last"
     ).innerText = `- ￦ ${discountAmount.toLocaleString()}`;
 
-    updateFinalPrice(totalProductPrice); // 최종 결제 금액 업데이트
+    updateFinalPrice(); // 최종 결제 금액 업데이트
   });
 
   // 크레딧 버튼 클릭 이벤트
@@ -724,16 +730,114 @@ function setupDiscountListeners() {
     // 결제 금액이 50,000원 미만인 경우 크레딧 사용 제한
     if (totalProductPrice < 50000) {
       alert("결제 금액이 50,000원 미만인 경우 크레딧을 사용할 수 없습니다.");
-      document.querySelector(".credit__fee-last").innerText = `₩ 0`; // 크레딧 초기화
+      document.querySelector(".credit__fee-last").innerText = "₩ 0"; // 크레딧 초기화
       return;
     }
 
     // 크레딧 할인 금액 표시
+    const creditAmount = 20000; // 적용할 크레딧 금액
     document.querySelector(
       ".credit__fee-last"
     ).innerText = `- ￦ ${creditAmount.toLocaleString()}`;
 
-    updateFinalPrice(totalProductPrice); // 최종 결제 금액 업데이트
+    updateFinalPrice(); // 최종 결제 금액 업데이트
+  });
+}
+
+// 쿠폰 초기화 및 옵션 추가
+function setupCouponOptions() {
+  const couponSelect = document.querySelector("#coupon");
+
+  // 기존 쿠폰 옵션 제거
+  couponSelect.innerHTML = "";
+
+  // 기본 옵션 추가
+  const defaultOption = document.createElement("option");
+  defaultOption.innerText = "쿠폰을 선택하세요";
+  defaultOption.disabled = true;
+  defaultOption.selected = true;
+  couponSelect.appendChild(defaultOption);
+
+  // 새로운 쿠폰 목록과 최소 사용 금액
+  const coupons = [
+    { name: "5% 할인 쿠폰 - 첫 구매 감사", discount: 0.05, minAmount: 30000 },
+    { name: "7% 할인 쿠폰 - VIP 전용", discount: 0.07, minAmount: 50000 },
+    { name: "10% 할인 쿠폰 - 특별 혜택", discount: 0.1, minAmount: 100000 },
+  ];
+
+  const totalProductPriceText =
+    document.querySelector(".total__fee .price").innerText;
+  const totalProductPrice = parseInt(
+    totalProductPriceText.replace(/[^0-9]/g, ""),
+    10
+  );
+
+  coupons.forEach((coupon) => {
+    const option = document.createElement("option");
+    option.value = coupon.discount;
+    option.innerText = coupon.name;
+
+    if (totalProductPrice >= coupon.minAmount) {
+      option.disabled = false;
+    } else {
+      option.disabled = true;
+      option.innerText += ` (₩${coupon.minAmount.toLocaleString()} 이상 구매 시 사용 가능)`;
+    }
+
+    couponSelect.appendChild(option);
+  });
+
+  document.querySelector(".coupon__fee-last").innerText = "₩ 0";
+}
+
+// 크레딧
+function setupCreditListener() {
+  const creditInput = document.querySelector("#used__credit__box");
+  const creditFeeElement = document.querySelector(".credit__fee-last");
+
+  // 크레딧 초기값 설정
+  creditInput.readOnly = true;
+  creditInput.value = "₩ 0";
+  creditFeeElement.innerText = "₩ 0";
+
+  const fullCreditButton = document.querySelector(".used__credit button");
+
+  // 결제 금액 확인 함수
+  const getFinalPrice = () => {
+    const finalPriceElement = document.querySelector(".final__price span");
+    const finalPrice = finalPriceElement
+      ? Number(finalPriceElement.innerText.replace(/[₩,]/g, ""))
+      : 0;
+    return finalPrice;
+  };
+
+  // 버튼 클릭 이벤트
+  fullCreditButton.addEventListener("click", function (event) {
+    event.preventDefault();
+
+    const finalPrice = getFinalPrice();
+
+    // 결제 금액 50,000원 미만일 때 처리
+    if (finalPrice > 50000) {
+      alert("결제 금액이 50,000원 미만인 경우 크레딧을 사용할 수 없습니다.");
+      creditInput.value = "₩ 0";
+      creditFeeElement.innerText = "₩ 0";
+      return;
+    }
+
+    // 크레딧 적용
+    const creditAmount = 20000; // 적용할 크레딧 금액
+    const formattedCredit = `- ₩ ${creditAmount.toLocaleString()}`;
+    creditInput.value = formattedCredit;
+    creditFeeElement.innerText = formattedCredit;
+
+    // 최종 결제 금액 업데이트
+    updateFinalPrice(finalPrice - creditAmount);
+  });
+
+  // 포커스 아웃 이벤트 (빈 값 방지)
+  creditInput.addEventListener("focusout", function () {
+    creditInput.value = creditInput.value || "₩ 0";
   });
 }
 
@@ -826,127 +930,6 @@ phoneNumberInput.addEventListener("input", onlyNumber); // 숫자만
 zipcodeInput.addEventListener("input", onlyNumber); // 숫자만
 nameInput.addEventListener("input", onlyKorean); // 한글만
 customsNumberInput.addEventListener("input", validateFirstCharacter); // 첫 글자 'P' 확인
-
-// 쿠폰
-function setupCouponOptions() {
-  const couponSelect = document.querySelector("#coupon");
-
-  // 기존 쿠폰 옵션 제거
-  couponSelect.innerHTML = "";
-
-  // 기본 옵션 추가
-  const defaultOption = document.createElement("option");
-  defaultOption.innerText = "쿠폰을 선택하세요";
-  defaultOption.disabled = true;
-  defaultOption.selected = true;
-  couponSelect.appendChild(defaultOption);
-
-  // 새로운 쿠폰 목록과 최소 사용 금액
-  const coupons = [
-    { name: "5% 할인 쿠폰 - 첫 구매 감사", discount: 0.05, minAmount: 30000 },
-    { name: "7% 할인 쿠폰 - VIP 전용", discount: 0.07, minAmount: 50000 },
-    { name: "10% 할인 쿠폰 - 특별 혜택", discount: 0.1, minAmount: 100000 },
-  ];
-
-  // 구매 합계 금액 가져오기
-  const totalProductPriceText =
-    document.querySelector(".total__fee .price").innerText;
-  const totalProductPrice = parseInt(
-    totalProductPriceText.replace(/[^0-9]/g, ""),
-    10
-  );
-
-  coupons.forEach((coupon) => {
-    const option = document.createElement("option");
-    option.value = coupon.discount;
-    option.innerText = coupon.name;
-    option.classList.add("dynamic-option");
-
-    // 최소 금액 조건에 따라 활성화/비활성화
-    if (totalProductPrice >= coupon.minAmount) {
-      option.disabled = false;
-    } else {
-      option.disabled = true;
-      option.innerText += ` (₩${coupon.minAmount.toLocaleString()} 이상 구매 시 사용 가능)`;
-    }
-
-    couponSelect.appendChild(option);
-  });
-
-  couponSelect.addEventListener("change", function () {
-    const discountRate = parseFloat(couponSelect.value);
-    const totalProductPriceText =
-      document.querySelector(".total__fee .price").innerText;
-    const totalProductPrice = parseInt(
-      totalProductPriceText.replace(/[^0-9]/g, ""),
-      10
-    );
-
-    let discountAmount = 0;
-    if (!isNaN(discountRate) && !isNaN(totalProductPrice)) {
-      discountAmount = totalProductPrice * discountRate;
-    }
-
-    document.querySelector(
-      ".coupon__fee-last"
-    ).innerText = `- ₩ ${discountAmount.toLocaleString()}`;
-
-    updateFinalPrice();
-  });
-
-  document.querySelector(".coupon__fee-last").innerText = `₩ 0`;
-}
-
-// 크레딧
-function setupCreditListener() {
-  const creditInput = document.querySelector("#used__credit__box");
-  const creditFeeElement = document.querySelector(".credit__fee-last");
-
-  // 크레딧 초기값 설정
-  creditInput.readOnly = true;
-  creditInput.value = "₩ 0";
-  creditFeeElement.innerText = "₩ 0";
-
-  const fullCreditButton = document.querySelector(".used__credit button");
-
-  // 결제 금액 확인 함수
-  const getFinalPrice = () => {
-    const finalPriceElement = document.querySelector(".final__price span");
-    const finalPrice = finalPriceElement
-      ? Number(finalPriceElement.innerText.replace(/[₩,]/g, ""))
-      : 0;
-    return finalPrice;
-  };
-
-  // 버튼 클릭 이벤트
-  fullCreditButton.addEventListener("click", function (event) {
-    event.preventDefault();
-
-    const finalPrice = getFinalPrice();
-
-    // 결제 금액 50,000원 미만일 때 처리
-    if (finalPrice > 50000) {
-      alert("결제 금액이 50,000원 미만인 경우 크레딧을 사용할 수 없습니다.");
-      creditInput.value = "₩ 0";
-      creditFeeElement.innerText = "₩ 0";
-      return;
-    }
-
-    // 크레딧 적용
-    const creditAmount = 20000; // 적용할 크레딧 금액
-    const formattedCredit = `- ₩ ${creditAmount.toLocaleString()}`;
-    creditInput.value = formattedCredit;
-    creditFeeElement.innerText = formattedCredit;
-
-    // 최종 결제 금액 업데이트
-    updateFinalPrice(finalPrice - creditAmount);
-  });
-
-  // 포커스 아웃 이벤트 (빈 값 방지)
-  creditInput.addEventListener("focusout", function () {
-    creditInput.value = creditInput.value || "₩ 0";
-  });
-}
 
 //결제창 동의서 - 아코디언
 const consentBtns = document.querySelectorAll(".consent-title");

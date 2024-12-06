@@ -499,9 +499,12 @@ function openModal(index) {
     updateModalQuantity(-1, index);
   });
 
-  // "취소" 버튼 클릭 이벤트
   modalCancelButton.addEventListener("click", function () {
     // 초기값 복원
+    product.selectColor = initialProduct.color;
+    product.selectSize = initialProduct.size;
+    product.quan = initialProduct.quan;
+
     modalColor.innerHTML = initialProduct.color;
     modalSize.innerHTML = initialProduct.size;
     modalAmount.value = initialProduct.quan;
