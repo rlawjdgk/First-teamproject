@@ -566,12 +566,15 @@ function openModal(index) {
 }
 
 // 모달창에서 수량을 업데이트하는 함수
-
 function updateModalQuantity(delta, index) {
   const optionModal = document.querySelector(".modal__box");
   const modalSum = optionModal.querySelector(".final__price");
-  const product = getCartProducts[index];
-  let newQuantity = product.quan + delta;
+  const modalAmount = optionModal.querySelector(".modal-amount");
+  const modalPrice = optionModal.querySelector("#modal-price");
+
+  // 현재 모달에 표시된 수량
+  let currentQuantity = parseInt(modalAmount.value, 10);
+  let newQuantity = currentQuantity + delta;
 
   // 수량 제한
   if (newQuantity < 1) {
@@ -581,17 +584,14 @@ function updateModalQuantity(delta, index) {
     newQuantity = 5;
   }
 
-  // 모달 UI만 업데이트하고 로컬스토리지에는 업데이트하지 않음
-  const modalAmount = optionModal.querySelector(".modal-amount");
-  const modalPrice = optionModal.querySelector("#modal-price");
-
+  // 모달 UI 업데이트
   modalAmount.value = newQuantity;
   modalPrice.innerText = `￦${(
-    product.sumPrice * newQuantity
+    getCartProducts[index].sumPrice * newQuantity
   ).toLocaleString()}`;
 
   modalSum.innerHTML = `<span>결제금액</span><span>￦${(
-    product.sumPrice * newQuantity
+    getCartProducts[index].sumPrice * newQuantity
   ).toLocaleString()}</span>`;
 }
 
