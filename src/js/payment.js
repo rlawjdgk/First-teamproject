@@ -361,8 +361,6 @@ form.addEventListener("submit", function (e) {
 });
 
 // 편집 버튼 클릭
-
-// 편집 버튼 클릭
 userInfo.addEventListener("click", function (e) {
   if (e.target.closest(".edit")) {
     const listItem = e.target.closest("ul");
@@ -672,23 +670,30 @@ function updateFinalPrice(totalAmount = 0) {
 
   const couponFee =
     parseInt(couponFeeElement.innerText.replace(/[^0-9]/g, ""), 10) || 0;
-  const creditFee =
+  let creditFee =
     parseInt(creditFeeElement.innerText.replace(/[^0-9]/g, ""), 10) || 0;
 
-  // 쿠폰과 크레딧 적용 후 최종 금액 계산 (소수점 버림)
-  let lastPriceAll = Math.floor(totalAmount - couponFee - creditFee);
+  // 결제 금액이 50,000원 미만인 경우 크레딧 초기화
+  if (totalAmount - couponFee < 50000) {
+    creditFee = 0;
+    creditFeeElement.innerText = `₩ 0`;
+  }
+
+  // 최종 금액 계산 (음수 방지)
+  const lastPriceAll = Math.max(totalAmount - couponFee - creditFee, 0);
 
   summaryPriceElement.innerText = `￦ ${lastPriceAll.toLocaleString()}`;
 }
 
 // 쿠폰과 크레딧 이벤트 리스너 설정
-
 function setupDiscountListeners() {
   const couponSelect = document.querySelector("#coupon");
   const creditButton = document.querySelector(".used__credit button");
+  const creditAmount = 20000; // 크레딧 금액
 
+  // 쿠폰 변경 이벤트
   couponSelect.addEventListener("change", function () {
-    const discountRate = parseFloat(couponSelect.value);
+    const discountRate = parseFloat(couponSelect.value) || 0;
     const totalFeePriceText =
       document.querySelector(".total__fee .price").innerText;
     const totalProductPrice = parseInt(
@@ -696,10 +701,7 @@ function setupDiscountListeners() {
       10
     );
 
-    let discountAmount = 0;
-    if (!isNaN(discountRate)) {
-      discountAmount = Math.floor(totalProductPrice * discountRate); // 소수점 버림
-    }
+    const discountAmount = Math.floor(totalProductPrice * discountRate); // 소수점 버림
 
     document.querySelector(
       ".coupon__fee-last"
@@ -708,12 +710,9 @@ function setupDiscountListeners() {
     updateFinalPrice(totalProductPrice); // 최종 결제 금액 업데이트
   });
 
+  // 크레딧 버튼 클릭 이벤트
   creditButton.addEventListener("click", function (event) {
     event.preventDefault();
-    const totalCredit = 20000; // 크레딧 금액
-    document.querySelector(
-      ".credit__fee-last"
-    ).innerText = `- ￦ ${totalCredit.toLocaleString()}`;
 
     const totalFeePriceText =
       document.querySelector(".total__fee .price").innerText;
@@ -721,6 +720,18 @@ function setupDiscountListeners() {
       totalFeePriceText.replace(/[^0-9]/g, ""),
       10
     );
+
+    // 결제 금액이 50,000원 미만인 경우 크레딧 사용 제한
+    if (totalProductPrice < 50000) {
+      alert("결제 금액이 50,000원 미만인 경우 크레딧을 사용할 수 없습니다.");
+      document.querySelector(".credit__fee-last").innerText = `₩ 0`; // 크레딧 초기화
+      return;
+    }
+
+    // 크레딧 할인 금액 표시
+    document.querySelector(
+      ".credit__fee-last"
+    ).innerText = `- ￦ ${creditAmount.toLocaleString()}`;
 
     updateFinalPrice(totalProductPrice); // 최종 결제 금액 업데이트
   });
@@ -891,8 +902,8 @@ function setupCreditListener() {
   const creditInput = document.querySelector("#used__credit__box");
   const creditFeeElement = document.querySelector(".credit__fee-last");
 
+  // 크레딧 초기값 설정
   creditInput.readOnly = true;
-
   creditInput.value = "₩ 0";
   creditFeeElement.innerText = "₩ 0";
 
@@ -913,19 +924,27 @@ function setupCreditListener() {
 
     const finalPrice = getFinalPrice();
 
-    if (finalPrice < 50000) {
+    // 결제 금액 50,000원 미만일 때 처리
+    if (finalPrice > 50000) {
       alert("결제 금액이 50,000원 미만인 경우 크레딧을 사용할 수 없습니다.");
+      creditInput.value = "₩ 0";
+      creditFeeElement.innerText = "₩ 0";
       return;
     }
 
-    const formattedCredit = `- ₩ ${totalCredit.toLocaleString()}`;
+    // 크레딧 적용
+    const creditAmount = 20000; // 적용할 크레딧 금액
+    const formattedCredit = `- ₩ ${creditAmount.toLocaleString()}`;
     creditInput.value = formattedCredit;
     creditFeeElement.innerText = formattedCredit;
-    updateFinalPrice();
+
+    // 최종 결제 금액 업데이트
+    updateFinalPrice(finalPrice - creditAmount);
   });
 
+  // 포커스 아웃 이벤트 (빈 값 방지)
   creditInput.addEventListener("focusout", function () {
-    creditInput.value = creditInput.value || `₩ 0`;
+    creditInput.value = creditInput.value || "₩ 0";
   });
 }
 

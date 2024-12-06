@@ -411,10 +411,20 @@ function addEventListeners() {
 function openModal(index) {
   const optionModal = document.querySelector(".modal__box");
   const modalClose = optionModal.querySelector(".modal__close-box .close");
+  const modalCancelButton = optionModal.querySelector(
+    'input[type="button"].close'
+  );
   const product = getCartProducts[index];
   const productData = productsData.find(function (item) {
     return item.id === product.id;
   });
+
+  // 초기 상태 저장
+  const initialProduct = {
+    color: product.selectColor,
+    size: product.selectSize,
+    quan: product.quan,
+  };
 
   const modalImg = optionModal.querySelector(".product__img img");
   const modalTitle = optionModal.querySelector(".product__info-title");
@@ -489,6 +499,19 @@ function openModal(index) {
     updateModalQuantity(-1, index);
   });
 
+  // "취소" 버튼 클릭 이벤트
+  modalCancelButton.addEventListener("click", function () {
+    // 초기값 복원
+    modalColor.innerHTML = initialProduct.color;
+    modalSize.innerHTML = initialProduct.size;
+    modalAmount.value = initialProduct.quan;
+
+    // 모달 닫기
+    optionModal.classList.remove("active");
+    document.body.style.overflow = "auto";
+  });
+
+  // "닫기" 버튼 클릭 이벤트
   modalClose.addEventListener("click", function () {
     optionModal.classList.remove("active");
     document.body.style.overflow = "auto";
@@ -497,6 +520,7 @@ function openModal(index) {
   const confirmBtn = optionModal.querySelector(
     'input[type="submit"][value="확인"]'
   );
+
   confirmBtn.addEventListener("click", function () {
     const updatedProduct = {
       ...product,
