@@ -414,17 +414,17 @@ function openModal(index) {
   const modalCancelButton = optionModal.querySelector(
     'input[type="button"].close'
   );
+
+  // getCartProducts 배열에서 선택된 제품을 가져옵니다.
   const product = getCartProducts[index];
+
+  // 초기 상태 저장 (취소 시 복원용)
+  const initialProduct = { ...product };
+
+  // 제품 데이터 찾기 (productsData 배열에서)
   const productData = productsData.find(function (item) {
     return item.id === product.id;
   });
-
-  // 초기 상태 저장
-  const initialProduct = {
-    color: product.selectColor,
-    size: product.selectSize,
-    quan: product.quan,
-  };
 
   const modalImg = optionModal.querySelector(".product__img img");
   const modalTitle = optionModal.querySelector(".product__info-title");
@@ -456,6 +456,7 @@ function openModal(index) {
       option.textContent = color;
       colorSelect.appendChild(option);
     });
+    colorSelect.value = product.selectColor;
   }
 
   if (productData?.details?.selectOptions?.sizes?.options) {
@@ -465,6 +466,7 @@ function openModal(index) {
       option.textContent = size;
       sizeSelect.appendChild(option);
     });
+    sizeSelect.value = product.selectSize;
   }
 
   colorSelect.addEventListener("change", function () {
@@ -478,14 +480,15 @@ function openModal(index) {
   const modalAmount = optionModal.querySelector(".modal-amount");
   const modalPrice = optionModal.querySelector("#modal-price");
 
-  modalAmount.value = product.quan;
+  // 로컬스토리지에서 수량을 가져와서 모달에 표시
+  modalAmount.value = initialProduct.quan;
   modalPrice.innerText = `￦${(
-    product.sumPrice * product.quan
+    initialProduct.sumPrice * initialProduct.quan
   ).toLocaleString()}`;
 
   const modalSum = optionModal.querySelector(".final__price");
   modalSum.innerHTML = `<span>결제금액</span><span>￦${(
-    product.sumPrice * product.quan
+    initialProduct.sumPrice * initialProduct.quan
   ).toLocaleString()}</span>`;
 
   const modalAddBtn = optionModal.querySelector(".modal-add");
@@ -499,15 +502,18 @@ function openModal(index) {
     updateModalQuantity(-1, index);
   });
 
+  // "취소" 버튼 클릭 이벤트
   modalCancelButton.addEventListener("click", function () {
     // 초기값 복원
-    product.selectColor = initialProduct.color;
-    product.selectSize = initialProduct.size;
-    product.quan = initialProduct.quan;
-
-    modalColor.innerHTML = initialProduct.color;
-    modalSize.innerHTML = initialProduct.size;
+    modalColor.innerHTML = initialProduct.selectColor;
+    modalSize.innerHTML = initialProduct.selectSize;
     modalAmount.value = initialProduct.quan;
+    modalPrice.innerText = `￦${(
+      initialProduct.sumPrice * initialProduct.quan
+    ).toLocaleString()}`;
+    modalSum.innerHTML = `<span>결제금액</span><span>￦${(
+      initialProduct.sumPrice * initialProduct.quan
+    ).toLocaleString()}</span>`;
 
     // 모달 닫기
     optionModal.classList.remove("active");
@@ -549,7 +555,7 @@ function openModal(index) {
       getCartProducts[index] = updatedProduct;
     }
 
-    updateLocalStorage();
+    localStorage.setItem("setCartProducts", JSON.stringify(getCartProducts));
     renderCartItems();
     optionModal.classList.remove("active");
     document.body.style.overflow = "auto";
@@ -560,6 +566,7 @@ function openModal(index) {
 }
 
 // 모달창에서 수량을 업데이트하는 함수
+
 function updateModalQuantity(delta, index) {
   const optionModal = document.querySelector(".modal__box");
   const modalSum = optionModal.querySelector(".final__price");
@@ -574,8 +581,7 @@ function updateModalQuantity(delta, index) {
     newQuantity = 5;
   }
 
-  product.quan = newQuantity;
-
+  // 모달 UI만 업데이트하고 로컬스토리지에는 업데이트하지 않음
   const modalAmount = optionModal.querySelector(".modal-amount");
   const modalPrice = optionModal.querySelector("#modal-price");
 
@@ -587,9 +593,6 @@ function updateModalQuantity(delta, index) {
   modalSum.innerHTML = `<span>결제금액</span><span>￦${(
     product.sumPrice * newQuantity
   ).toLocaleString()}</span>`;
-
-  updateLocalStorage();
-  renderCartItems();
 }
 
 // 로컬스토리지 업데이트 함수
