@@ -619,8 +619,10 @@ table {
     display: inline-block;
     width: 32px;
     height: 32px;
-    object-fit: cover;
-    object-position: center;
+    -o-object-fit: cover;
+       object-fit: cover;
+    -o-object-position: center;
+       object-position: center;
   }
   #footer .footer-m-inner ul li.footer-m__menu-home i {
     background-image: url("../../../assets/images/footer/t-menu-home-ico.svg");
@@ -671,8 +673,10 @@ table {
     display: inline-block;
     width: 24px;
     height: 24px;
-    object-fit: cover;
-    object-position: center;
+    -o-object-fit: cover;
+       object-fit: cover;
+    -o-object-position: center;
+       object-position: center;
   }
   #footer .footer-m-inner ul li.footer-m__menu-home i {
     background-image: url("../../../assets/images/footer/m-menu-home-ico.svg");

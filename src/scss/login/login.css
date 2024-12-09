@@ -296,7 +296,8 @@ table {
 .wrapper .modal__box .img img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  -o-object-fit: cover;
+     object-fit: cover;
   border-radius: 8px;
 }
 .wrapper .modal__box .agree {

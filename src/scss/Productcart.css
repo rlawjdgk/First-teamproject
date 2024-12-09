@@ -355,7 +355,8 @@ body {
 .container main .section__up article .product__info-All .product img {
   width: 100px;
   height: 100px;
-  object-fit: fill;
+  -o-object-fit: fill;
+     object-fit: fill;
   border-radius: 8px;
 }
 .container main .section__up article .product__info-All .product .product__info {
@@ -619,8 +620,10 @@ body {
   height: 100%;
   transition: all 0.3s;
   border-radius: 8px;
-  object-fit: cover;
-  object-position: center;
+  -o-object-fit: cover;
+     object-fit: cover;
+  -o-object-position: center;
+     object-position: center;
 }
 .container main .section__down .section__down-product .product-lists .product-list .product-list__title {
   margin-bottom: 10px;
@@ -753,6 +756,7 @@ body {
   position: sticky;
   top: 20px;
   width: 26%;
+  height: -moz-fit-content;
   height: fit-content;
 }
 .container .pc-aside .checkout__summary {
@@ -941,7 +945,8 @@ body {
 .modal__box .modal__inner .modal__inner-box .product .product__img img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  -o-object-fit: cover;
+     object-fit: cover;
   border-radius: 10px;
 }
 .modal__box .modal__inner .modal__inner-box .product .product__info {
@@ -1438,7 +1443,8 @@ body {
   .container main .section__up article .product__info-All .product img {
     width: 100px;
     height: 100px;
-    object-fit: cover;
+    -o-object-fit: cover;
+       object-fit: cover;
     border-radius: 8px;
   }
   .container main .section__up article .product__info-All .product .product__info {
@@ -1751,7 +1757,8 @@ body {
   .container main .section__up article .product__info-All .product img {
     width: 60px;
     height: 60px;
-    object-fit: cover;
+    -o-object-fit: cover;
+       object-fit: cover;
     border-radius: 8px;
   }
   .container main .section__up article .product__info-All .product .product__info {
